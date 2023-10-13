@@ -1,0 +1,32 @@
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+
+def calculate_voltage_drop(power: float, voltage: float, length: float, cross_section: float, material_resistivity: float) -> float:
+    current = power / voltage
+    resistance = (2 * material_resistivity * length) / cross_section
+    voltage_drop = current * resistance
+    return voltage - voltage_drop
+
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text("Send me power, voltage, length, cross section, and material resistivity, separated by commas.")
+
+def handle_values(update: Update, context: CallbackContext) -> None:
+    try:
+        power, voltage, length, cross_section, material_resistivity = map(float, update.message.text.split(","))
+        voltage_at_end = calculate_voltage_drop(power, voltage, length, cross_section, material_resistivity)
+        update.message.reply_text(f"Voltage at the end of the wire: {voltage_at_end:.2f} V")
+    except ValueError:
+        update.message.reply_text("Invalid input. Please send me 5 numerical values separated by commas.")
+
+def main() -> None:
+    updater = Updater("6334079830:AAHS9WrXR9QEwx8U9FVl5Q-anyw-oaiKKxc")
+
+    dp = updater.dispatcher
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_values))
+
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
